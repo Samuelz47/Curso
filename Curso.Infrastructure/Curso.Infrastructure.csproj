@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Curso.Application\Curso.Application.csproj" />
+    <ProjectReference Include="..\Curso.Domain\Curso.Domain.csproj" />
+    <ProjectReference Include="..\Curso.Shared\Curso.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
