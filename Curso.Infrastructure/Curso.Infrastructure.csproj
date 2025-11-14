@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.Identity.EntityFramework" Version="2.2.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Curso.Application\Curso.Application.csproj" />
     <ProjectReference Include="..\Curso.Domain\Curso.Domain.csproj" />
     <ProjectReference Include="..\Curso.Shared\Curso.Shared.csproj" />
