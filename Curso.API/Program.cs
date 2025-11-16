@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using NSwag; // <-- USANDO NSWAG
 using NSwag.Generation.Processors.Security; // <-- USANDO NSWAG
 using System.Text;
+using Curso.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +70,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<IInstructorRepository, InstructorRepository>();
 
 builder.Services.AddControllers();

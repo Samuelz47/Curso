@@ -40,10 +40,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                   .WithOne(e => e.Student)
                   .HasForeignKey(e => e.StudentId);
 
-            // Índice de e-mail único
-            entity.HasIndex(s => s.Email)
-                  .IsUnique();
-
             // Filtro de Soft Delete
             entity.HasQueryFilter(s => !s.IsDeleted);
         });
