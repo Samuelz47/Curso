@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 namespace Curso.Domain.Entities;
 public class Student
 {
-    public Student(string fullName, string email, DateTime registerDate, string applicationUserId, bool isDeleted)
+    public Student(string fullName, DateTime registerDate, string applicationUserId, bool isDeleted)
     {
         FullName = fullName;
-        Email = email;
         RegisterDate = registerDate;
         ApplicationUserId = applicationUserId;
         IsDeleted = false;
@@ -21,9 +20,6 @@ public class Student
     [Required]
     [MaxLength(100)]
     public string FullName { get; set; }
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; }
     public DateTime RegisterDate { get; set; }
     public string ApplicationUserId { get; set; }
     public List<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
