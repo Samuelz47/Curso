@@ -1,19 +1,34 @@
+using Curso.Application.Interfaces;
+using Curso.Application.Mappings;
+using Curso.Application.Repositories;
+using Curso.Application.Services;
 using Curso.Infrastructure.Context;
+using Microsoft.Extensions.Logging;
+// using Curso.Infrastructure.Context; // Removido
 using Curso.Infrastructure.Identity;
 using Curso.Infrastructure.Persistence;
+using Curso.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System;
+// using Microsoft.OpenApi.Models; // <-- NÃO PRECISA MAIS
+using NSwag; // <-- USANDO NSWAG
+using NSwag.Generation.Processors.Security; // <-- USANDO NSWAG
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+    throw new ArgumentNullException(nameof(jwtKey), "A chave JWT 'Jwt:Key' não foi encontrada.");
+}
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString)
-);
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -22,10 +37,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
-
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
-
     options.User.RequireUniqueEmail = true;
 })
     .AddEntityFrameworkStores<AppDbContext>()
@@ -46,14 +59,42 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-        )
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
 });
 
+builder.Services.AddAutoMapper(typeof(CourseMappingProfile).Assembly);
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IInstructorRepository, InstructorRepository>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// --- SUBSTITUIÇÃO DO SWAGGER ---
+// 1. Substitui o AddSwaggerGen
+builder.Services.AddOpenApiDocument(settings =>
+{
+    settings.Title = "Sistema Ensino API";
+    settings.Version = "v1";
+
+    // Configuração do "Authorize" (Bearer Token) para NSwag
+    settings.AddSecurity("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Insira seu token JWT desta forma: Bearer {seu_token}",
+        In = OpenApiSecurityApiKeyLocation.Header,
+        Type = OpenApiSecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    // Aplica o cadeado de segurança em todos os endpoints
+    settings.OperationProcessors.Add(new OperationSecurityScopeProcessor("Bearer"));
+});
 
 var app = builder.Build();
 
@@ -70,16 +111,19 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Um erro ocorreu durante o seeding do banco.");
     }
 }
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // 2. Substitui o UseSwagger()
+    app.UseOpenApi();
+
+    // 3. Substitui o UseSwaggerUI()
+    app.UseSwaggerUi(); // (Note que é 'Ui' minúsculo)
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
