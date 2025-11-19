@@ -1,4 +1,5 @@
 ﻿using Curso.Domain.Entities;
+using Curso.Shared.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,4 +10,5 @@ namespace Curso.Application.Repositories;
 public interface IEnrollmentRepository : IRepository<Enrollment>
 {
     Task<bool> IsUniqueAsync(int studentId, int courseId);
+    Task<PagedResult<Enrollment>> GetEnrollmentsByStudent(int studentId, QueryParameters queryP);
 }

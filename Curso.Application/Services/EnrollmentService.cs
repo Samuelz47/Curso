@@ -4,6 +4,7 @@ using Curso.Application.Interfaces;
 using Curso.Application.Repositories;
 using Curso.Domain.Entities;
 using Curso.Domain.Enums;
+using Curso.Shared.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,4 +77,28 @@ public class EnrollmentService : IEnrollmentService
         return enrollmentDto;
     }
         
+    public async Task<PagedResult<EnrollmentDTO>> GetEnrolmmentByStudent(QueryParameters queryP, ClaimsPrincipal loggedInUser, int studentId)
+    {
+        var student = await _studentRepository.GetAsync(s => s.Id == studentId);
+        if (student == null) throw new ApplicationException("Estudante não encontrado");
+
+        bool isAdmin = loggedInUser.IsInRole("Admin");
+        string loggedInUserId = loggedInUser.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!isAdmin && student.ApplicationUserId != loggedInUserId)
+        {
+            throw new UnauthorizedAccessException("Sem permissão.");
+        }
+
+        var pagedResult = await _enrollmentRepository.GetEnrollmentsByStudent(studentId, queryP);
+
+        var dtos = _mapper.Map<List<EnrollmentDTO>>(pagedResult.Items);
+
+        return new PagedResult<EnrollmentDTO>(
+            dtos,
+            pagedResult.TotalCount,
+            pagedResult.PageNumber,
+            pagedResult.PageSize
+        );
+    }
 }
